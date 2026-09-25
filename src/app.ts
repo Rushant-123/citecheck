@@ -1,6 +1,7 @@
 /** citecheck HTTP app. Two lanes: free (3 items, no stance) and paid via MPP (Tempo). */
 import { Hono } from "hono";
 import { Mppx, tempo } from "mppx/hono";
+import { generate as generateOpenApi } from "mppx/discovery";
 import { checkItem, type Fetcher, type Item, type Judge, type Result } from "./check";
 import { makeJudge } from "./stance";
 
@@ -85,6 +86,54 @@ export function createApp(deps: Deps) {
   app.get("/", (c) => c.redirect("/llms.txt"));
   app.get("/health", (c) => c.json({ ok: true }));
 
+  const paymentOptions = (env: Env, price: string, description: string) => {
+    const testnet = env.TESTNET === "true";
+    return { amount: price, currency: testnet ? CURRENCY.testnet : CURRENCY.mainnet, decimals: 6, recipient: env.RECIPIENT, description };
+  };
+
+  /** MPP discovery document (OpenAPI 3.1 with x-payment-info). Required by `mppx validate` and the directory. */
+  app.get("/openapi.json", (c) => {
+    const origin = new URL(c.req.url).origin;
+    const mppx = Mppx.create({ methods: [tempo.charge({ testnet: c.env.TESTNET === "true" })], secretKey: c.env.MPP_SECRET_KEY, realm: new URL(origin).hostname });
+    const requestBody = {
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            required: ["items"],
+            properties: {
+              items: {
+                type: "array",
+                maxItems: PRICING.max_items,
+                items: {
+                  type: "object",
+                  required: ["url"],
+                  properties: {
+                    url: { type: "string", format: "uri" },
+                    quote: { type: "string", description: "verbatim text expected on the page" },
+                    claim: { type: "string", description: "assertion this citation supports (stance lane)" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+    const doc = generateOpenApi(
+      { methods: mppx.methods, realm: mppx.realm },
+      {
+        info: { title: "citecheck", version: "0.1.0" },
+        serviceInfo: { categories: ["ai", "data"], docs: { homepage: origin, llms: `${origin}/llms.txt`, apiReference: `${origin}/openapi.json` } },
+        routes: [
+          { intent: "charge", method: "POST", path: "/v1/check", options: paymentOptions(c.env, PRICING.check, "Verify up to 10 citations: liveness, archive, quote drift"), requestBody, summary: "Check citations" },
+          { intent: "charge", method: "POST", path: "/v1/check/stance", options: paymentOptions(c.env, PRICING.check_stance, "Verify up to 10 citations with an LLM stance verdict per claim"), requestBody, summary: "Check citations with stance" },
+        ],
+      },
+    );
+    return c.json(doc);
+  });
+
   app.get("/llms.txt", (c) => c.text(LLMS_TXT(new URL(c.req.url).origin)));
 
   app.get("/ledger", async (c) => {
@@ -109,12 +158,9 @@ export function createApp(deps: Deps) {
         methods: [tempo.charge({ testnet })],
         secretKey: c.env.MPP_SECRET_KEY,
       });
-      const gate = mppx.charge({
-        amount: price,
-        currency: testnet ? CURRENCY.testnet : CURRENCY.mainnet,
-        recipient: c.env.RECIPIENT,
-        description: withStance ? "citecheck: verify up to 10 citations with stance" : "citecheck: verify up to 10 citations",
-      });
+      const gate = mppx.charge(
+        paymentOptions(c.env, price, withStance ? "citecheck: verify up to 10 citations with stance" : "citecheck: verify up to 10 citations"),
+      );
       const out = await gate(c, next);
       const status = out instanceof Response ? out.status : c.res?.status;
       if (status === 402) await bump(c.env.LEDGER, "challenges_402");

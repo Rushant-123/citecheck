@@ -47,6 +47,17 @@ describe("app", () => {
     expect(text).toContain("/v1/check/free");
   });
 
+  it("serves an OpenAPI discovery document with payment info on paid routes", async () => {
+    const app = createApp({ fetch: okPage });
+    const res = await app.request("http://citecheck.test/openapi.json", {}, env());
+    expect(res.status).toBe(200);
+    const doc = (await res.json()) as any;
+    expect(doc.openapi).toMatch(/^3\./);
+    expect(doc.paths["/v1/check"].post["x-payment-info"]).toBeTruthy();
+    expect(doc.paths["/v1/check/stance"].post["x-payment-info"]).toBeTruthy();
+    expect(doc["x-service-info"].docs.llms).toBe("http://citecheck.test/llms.txt");
+  });
+
   it("free lane checks up to 3 items without payment", async () => {
     const app = createApp({ fetch: okPage });
     const res = await post(app, "/v1/check/free", {
