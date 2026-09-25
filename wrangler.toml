@@ -7,8 +7,8 @@ compatibility_flags = ["nodejs_compat"]
 enabled = true
 
 [vars]
-TESTNET = "true"
-RECIPIENT = "0x0000000000000000000000000000000000000000"
+TESTNET = "false"
+RECIPIENT = "0xAABA9C5D26dd960715747B39986d3310693E6B4f"
 
 # Secrets (set with `wrangler secret put`): MPP_SECRET_KEY, OPENROUTER_API_KEY
 
