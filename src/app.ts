@@ -5,6 +5,7 @@ import { generate as generateOpenApi } from "mppx/discovery";
 import { checkItem, type Fetcher, type Item, type Judge, type Result } from "./check";
 import { makeJudge } from "./stance";
 import { LANDING } from "./landing";
+import { FAVICON_B64 } from "./favicon";
 
 export type Env = {
   MPP_SECRET_KEY: string;
@@ -12,6 +13,8 @@ export type Env = {
   RECIPIENT: string;
   /** "true" to charge on Tempo testnet (pathUSD) instead of mainnet USDC.e. */
   TESTNET?: string;
+  /** Shown in openapi.json info.contact for registry ownership verification. */
+  CONTACT_EMAIL?: string;
   /** OpenRouter key for the stance judge. */
   OPENROUTER_API_KEY: string;
   LEDGER: KVNamespace;
@@ -87,6 +90,10 @@ export function createApp(deps: Deps) {
 
   app.get("/", (c) => c.html(LANDING(new URL(c.req.url).origin)));
   app.get("/health", (c) => c.json({ ok: true }));
+  app.get("/favicon.ico", (c) => {
+    const bytes = Uint8Array.from(atob(FAVICON_B64), (ch) => ch.charCodeAt(0));
+    return c.body(bytes, 200, { "content-type": "image/png", "cache-control": "public, max-age=86400" });
+  });
 
   const paymentOptions = (env: Env, price: string, description: string) => {
     const testnet = env.TESTNET === "true";
@@ -189,7 +196,7 @@ export function createApp(deps: Deps) {
 export function withRegistryExtensions(doc: Record<string, unknown>, env: Env, requestBody: Record<string, unknown>): Record<string, unknown> {
   const testnet = env.TESTNET === "true";
   const currency = testnet ? CURRENCY.testnet : CURRENCY.mainnet;
-  const info = { ...(doc.info as Record<string, unknown>), "x-guidance": GUIDANCE };
+  const info = { ...(doc.info as Record<string, unknown>), "x-guidance": GUIDANCE, contact: { email: env.CONTACT_EMAIL ?? "subs@saasden.club" } };
   const paths = { ...(doc.paths as Record<string, Record<string, Record<string, unknown>>>) };
   const priced: Record<string, string> = { "/v1/check": PRICING.check, "/v1/check/stance": PRICING.check_stance };
   for (const [path, price] of Object.entries(priced)) {

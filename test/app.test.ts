@@ -73,6 +73,16 @@ describe("app", () => {
     expect(doc.paths["/v1/check"].post["x-payment-info"].protocols[0].mpp.method).toBe("tempo");
     expect(doc.paths["/v1/check/free"].post.security).toEqual([]);
     expect(doc.paths["/ledger"].get.security).toEqual([]);
+    expect(doc.info.contact.email).toContain("@");
+  });
+
+  it("serves a PNG favicon", async () => {
+    const app = createApp({ fetch: okPage });
+    const res = await app.request("/favicon.ico", {}, env());
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("image/png");
+    const buf = new Uint8Array(await res.arrayBuffer());
+    expect(Array.from(buf.slice(1, 4))).toEqual([0x50, 0x4e, 0x47]);
   });
 
   it("free lane checks up to 3 items without payment", async () => {

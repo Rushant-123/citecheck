@@ -8,6 +8,7 @@ enabled = true
 
 [vars]
 TESTNET = "false"
+CONTACT_EMAIL = "rushantashtputre2002@gmail.com"
 RECIPIENT = "0xAABA9C5D26dd960715747B39986d3310693E6B4f"
 
 # Secrets (set with `wrangler secret put`): MPP_SECRET_KEY, OPENROUTER_API_KEY
