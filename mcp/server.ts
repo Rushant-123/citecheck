@@ -8,7 +8,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-export const DEFAULT_URL = "https://citecheck.rushant.workers.dev";
+export const DEFAULT_URL = "https://citecheck.citecheck.workers.dev";
 
 const ItemSchema = z.object({
   url: z.string().url().describe("The cited URL"),

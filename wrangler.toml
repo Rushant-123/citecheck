@@ -7,11 +7,11 @@ compatibility_flags = ["nodejs_compat"]
 enabled = true
 
 [vars]
-TESTNET = "false"
+TESTNET = "true"
 RECIPIENT = "0x0000000000000000000000000000000000000000"
 
 # Secrets (set with `wrangler secret put`): MPP_SECRET_KEY, OPENROUTER_API_KEY
 
 [[kv_namespaces]]
 binding = "LEDGER"
-id = "REPLACE_AFTER_WRANGLER_LOGIN"
+id = "6b56831c00864a4eb0ab4aa95a6f4a59"

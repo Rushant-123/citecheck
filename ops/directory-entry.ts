@@ -2,7 +2,7 @@
 // PR template: https://github.com/tempoxyz/mpp/blob/main/.github/PULL_REQUEST_TEMPLATE/service.md
 // Then: pnpm generate:discovery && pnpm check:types && pnpm build
 
-const SERVICE_URL = "https://citecheck.rushant.workers.dev";
+const SERVICE_URL = "https://citecheck.citecheck.workers.dev";
 
 export const citecheck = {
   id: "citecheck",
@@ -20,7 +20,7 @@ export const citecheck = {
     apiReference: `${SERVICE_URL}/openapi.json`,
   },
   provider: "citecheck",
-  realm: "citecheck.rushant.workers.dev",
+  realm: "citecheck.citecheck.workers.dev",
   intent: "charge",
   payments: ["TEMPO_PAYMENT"],
   endpoints: [

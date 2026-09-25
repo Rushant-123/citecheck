@@ -3,13 +3,13 @@
  * Ops check, run by the scheduled routine. Reads the public ledger, appends a line to ops/log.md,
  * and exits non-zero when the kill rule has fired so the routine knows to stop serving.
  *
- *   node bin/ops.mjs [--api https://citecheck.rushant.workers.dev] [--launch 2026-09-26] [--kill-days 14]
+ *   node bin/ops.mjs [--api https://citecheck.citecheck.workers.dev] [--launch 2026-09-26] [--kill-days 14]
  */
 import { appendFileSync, readFileSync, existsSync } from "node:fs";
 
 const args = process.argv.slice(2);
 const opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
-const api = opt("--api", process.env.CITECHECK_URL ?? "https://citecheck.rushant.workers.dev");
+const api = opt("--api", process.env.CITECHECK_URL ?? "https://citecheck.citecheck.workers.dev");
 const launch = new Date(opt("--launch", existsSync("ops/LAUNCH") ? readFileSync("ops/LAUNCH", "utf8").trim() : new Date().toISOString().slice(0, 10)));
 const killDays = Number(opt("--kill-days", 14));
 
