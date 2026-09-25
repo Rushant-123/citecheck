@@ -1,0 +1,17 @@
+name = "citecheck"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+
+[vars]
+TESTNET = "false"
+RECIPIENT = "0x0000000000000000000000000000000000000000"
+
+# Secrets (set with `wrangler secret put`): MPP_SECRET_KEY, ANTHROPIC_API_KEY
+
+[[kv_namespaces]]
+binding = "LEDGER"
+id = "REPLACE_AFTER_WRANGLER_LOGIN"
