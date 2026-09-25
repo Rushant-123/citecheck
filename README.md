@@ -50,7 +50,7 @@ npx mppx@latest validate https://<worker-url>
 Signal is paying wallets and repeat callers, not listings. Counters live at `/ledger`.
 
 1. Deploy on mainnet, validate, and make one paid call from a second wallet.
-2. Submit the directory PR to `tempoxyz/mpp` (`schemas/services.ts`) and register on MPPScan.
+2. Directory PR: https://github.com/tempoxyz/mpp/pull/1012 (open). MPPScan: registered, https://www.mppscan.com/server/724eb637032ea5e47a46aecba83ae5b8f0e7b958ae90df4a63fd0dc1e7721707 and https://tryponcho.com/m/citecheck.citecheck.workers.dev
 3. Post `llms.txt` where deep-research and content-agent builders already complain about dead citations.
 4. Kill rule: zero paid calls from strangers in 14 days means stop serving and write the post-mortem into this README.
 
