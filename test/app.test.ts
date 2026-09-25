@@ -28,7 +28,7 @@ function env(overrides: Partial<Env> = {}): Env {
     MPP_SECRET_KEY: "test-secret-key-that-is-at-least-32-bytes-long!!",
     RECIPIENT: "0x0000000000000000000000000000000000000001",
     TESTNET: "true",
-    ANTHROPIC_API_KEY: "",
+    OPENROUTER_API_KEY: "",
     LEDGER: new MemKV() as unknown as KVNamespace,
     ...overrides,
   };

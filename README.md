@@ -2,7 +2,7 @@
 
 Citation integrity checks for AI agents, sold per call.
 
-Send URLs plus the quote or claim each one is supposed to support. Get back, per URL: alive or dead, archived copy on the Wayback Machine, whether the quote is actually on the page, and (stance lane) whether the page supports or contradicts the claim. Deterministic where possible. One Haiku call per claim on the stance lane only.
+Send URLs plus the quote or claim each one is supposed to support. Get back, per URL: alive or dead, archived copy on the Wayback Machine, whether the quote is actually on the page, and (stance lane) whether the page supports or contradicts the claim. Deterministic where possible. One Haiku call per claim (via OpenRouter) on the stance lane only.
 
 ## Why this and not "another research API"
 
@@ -27,7 +27,7 @@ Payment is MPP (Machine Payments Protocol) on Tempo, USDC.e on mainnet. Unpaid r
 
 ```
 npm install
-cp .dev.vars.example .dev.vars   # fill MPP_SECRET_KEY (32+ bytes) and ANTHROPIC_API_KEY
+cp .dev.vars.example .dev.vars   # fill MPP_SECRET_KEY (32+ bytes) and OPENROUTER_API_KEY
 npm test
 npm run dev                       # http://localhost:8787
 npx mppx@latest validate http://localhost:8787
@@ -39,7 +39,7 @@ npx mppx@latest validate http://localhost:8787
 npx wrangler login
 npx wrangler kv namespace create LEDGER      # paste the id into wrangler.toml
 npx wrangler secret put MPP_SECRET_KEY
-npx wrangler secret put ANTHROPIC_API_KEY
+npx wrangler secret put OPENROUTER_API_KEY
 # set RECIPIENT in wrangler.toml to the Tempo wallet address, TESTNET = "false"
 npm run deploy
 npx mppx@latest validate https://<worker-url>
@@ -58,6 +58,6 @@ Signal is paying wallets and repeat callers, not listings. Counters live at `/le
 
 - `src/text.ts` HTML to text, normalization, LCS quote matcher
 - `src/check.ts` per-URL check, verdict rules
-- `src/stance.ts` Haiku judge
+- `src/stance.ts` Haiku judge via OpenRouter
 - `src/app.ts` Hono app, lanes, ledger, discovery
 - `test/` 26 vitest tests, no network

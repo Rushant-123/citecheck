@@ -10,7 +10,7 @@ enabled = true
 TESTNET = "false"
 RECIPIENT = "0x0000000000000000000000000000000000000000"
 
-# Secrets (set with `wrangler secret put`): MPP_SECRET_KEY, ANTHROPIC_API_KEY
+# Secrets (set with `wrangler secret put`): MPP_SECRET_KEY, OPENROUTER_API_KEY
 
 [[kv_namespaces]]
 binding = "LEDGER"

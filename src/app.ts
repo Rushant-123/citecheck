@@ -11,7 +11,8 @@ export type Env = {
   RECIPIENT: string;
   /** "true" to charge on Tempo testnet (pathUSD) instead of mainnet USDC.e. */
   TESTNET?: string;
-  ANTHROPIC_API_KEY: string;
+  /** OpenRouter key for the stance judge. */
+  OPENROUTER_API_KEY: string;
   LEDGER: KVNamespace;
 };
 
@@ -32,7 +33,7 @@ const CURRENCY = {
 
 type Deps = {
   fetch: Fetcher;
-  /** Overrides the Anthropic judge (tests). When absent, one is built from ANTHROPIC_API_KEY. */
+  /** Overrides the OpenRouter judge (tests). When absent, one is built from OPENROUTER_API_KEY. */
   judge?: Judge;
 };
 
@@ -77,7 +78,7 @@ export function createApp(deps: Deps) {
   const app = new Hono<{ Bindings: Env }>();
 
   const run = async (env: Env, body: Body, withStance: boolean): Promise<Result[]> => {
-    const judge = withStance ? (deps.judge ?? (env.ANTHROPIC_API_KEY ? makeJudge(env.ANTHROPIC_API_KEY) : undefined)) : undefined;
+    const judge = withStance ? (deps.judge ?? (env.OPENROUTER_API_KEY ? makeJudge({ apiKey: env.OPENROUTER_API_KEY }) : undefined)) : undefined;
     const results = await Promise.all(body.items.map((it) => checkItem(it, { fetch: deps.fetch, judge })));
     await bump(env.LEDGER, "urls_checked", results.length);
     return results;

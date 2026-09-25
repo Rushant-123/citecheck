@@ -1,25 +1,51 @@
-/** LLM stance judge. Haiku 4.5 by choice: the paid stance lane sells at $0.01 per URL, so the judge has to cost well under that. */
-import Anthropic from "@anthropic-ai/sdk";
+/**
+ * LLM stance judge over OpenRouter (OpenAI-compatible chat completions).
+ * Model is a cheap one by design: the stance lane sells at $0.01 per URL, so the judge must cost well under that.
+ */
 import type { Judge, Stance } from "./check";
 
-export const JUDGE_MODEL = "claude-haiku-4-5";
+export const JUDGE_MODEL = "anthropic/claude-haiku-4.5";
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 const SYSTEM = `You judge whether a web page supports a claim. You are given the claim and an excerpt of the page text.
 Answer with JSON only, no prose: {"stance":"supports"|"contradicts"|"unclear","confidence":0..1,"evidence":"<=200 chars quoted or closely paraphrased from the page"}.
 "supports": the page states the claim or facts that entail it. "contradicts": the page states something incompatible with the claim. "unclear": the page does not address it, or the excerpt is insufficient.
 Be strict: numbers, dates, names and attributions must match. Do not use outside knowledge.`;
 
-export function makeJudge(apiKey: string): Judge {
-  const client = new Anthropic({ apiKey });
+export type JudgeOptions = {
+  apiKey: string;
+  model?: string;
+  fetch?: typeof fetch;
+};
+
+export function makeJudge(opts: JudgeOptions): Judge {
+  const f = opts.fetch ?? fetch;
+  const model = opts.model ?? JUDGE_MODEL;
   return async (claim, pageText): Promise<Stance> => {
-    const res = await client.messages.create({
-      model: JUDGE_MODEL,
-      max_tokens: 300,
-      system: SYSTEM,
-      messages: [{ role: "user", content: `CLAIM:\n${claim}\n\nPAGE EXCERPT:\n${pageText}` }],
+    const res = await f(OPENROUTER_URL, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${opts.apiKey}`,
+        "content-type": "application/json",
+        "http-referer": "https://citecheck.dev",
+        "x-title": "citecheck",
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 300,
+        temperature: 0,
+        messages: [
+          { role: "system", content: SYSTEM },
+          { role: "user", content: `CLAIM:\n${claim}\n\nPAGE EXCERPT:\n${pageText}` },
+        ],
+      }),
     });
-    const text = res.content.map((b) => (b.type === "text" ? b.text : "")).join("");
-    return parseStance(text);
+    if (!res.ok) {
+      const body = (await res.text()).slice(0, 300);
+      throw new Error(`openrouter ${res.status}: ${body}`);
+    }
+    const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+    return parseStance(data.choices?.[0]?.message?.content ?? "");
   };
 }
 
