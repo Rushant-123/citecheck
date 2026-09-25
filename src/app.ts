@@ -4,6 +4,7 @@ import { Mppx, tempo } from "mppx/hono";
 import { generate as generateOpenApi } from "mppx/discovery";
 import { checkItem, type Fetcher, type Item, type Judge, type Result } from "./check";
 import { makeJudge } from "./stance";
+import { LANDING } from "./landing";
 
 export type Env = {
   MPP_SECRET_KEY: string;
@@ -84,7 +85,7 @@ export function createApp(deps: Deps) {
     return results;
   };
 
-  app.get("/", (c) => c.redirect("/llms.txt"));
+  app.get("/", (c) => c.html(LANDING(new URL(c.req.url).origin)));
   app.get("/health", (c) => c.json({ ok: true }));
 
   const paymentOptions = (env: Env, price: string, description: string) => {

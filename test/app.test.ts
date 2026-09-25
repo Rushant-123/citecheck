@@ -38,6 +38,16 @@ const post = (app: ReturnType<typeof createApp>, path: string, body: unknown, e 
   app.request(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }, e);
 
 describe("app", () => {
+  it("serves a human landing page at /", async () => {
+    const app = createApp({ fetch: okPage });
+    const res = await app.request("http://citecheck.test/", {}, env());
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/html");
+    const html = await res.text();
+    expect(html).toContain("http://citecheck.test/v1/check/free");
+    expect(html).toContain("llms.txt");
+  });
+
   it("serves llms.txt with pricing and endpoints", async () => {
     const app = createApp({ fetch: okPage });
     const res = await app.request("/llms.txt", {}, env());
