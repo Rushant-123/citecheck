@@ -66,6 +66,13 @@ describe("app", () => {
     expect(doc.paths["/v1/check"].post["x-payment-info"]).toBeTruthy();
     expect(doc.paths["/v1/check/stance"].post["x-payment-info"]).toBeTruthy();
     expect(doc["x-service-info"].docs.llms).toBe("http://citecheck.test/llms.txt");
+    // registry extensions (MPPScan)
+    expect(doc.info["x-guidance"]).toContain("Citation");
+    expect(doc.paths["/v1/check"].post["x-payment-info"].price).toEqual({ mode: "fixed", currency: "USD", amount: "0.020000" });
+    expect(doc.paths["/v1/check/stance"].post["x-payment-info"].price.amount).toBe("0.100000");
+    expect(doc.paths["/v1/check"].post["x-payment-info"].protocols[0].mpp.method).toBe("tempo");
+    expect(doc.paths["/v1/check/free"].post.security).toEqual([]);
+    expect(doc.paths["/ledger"].get.security).toEqual([]);
   });
 
   it("free lane checks up to 3 items without payment", async () => {

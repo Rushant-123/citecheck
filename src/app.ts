@@ -133,7 +133,7 @@ export function createApp(deps: Deps) {
         ],
       },
     );
-    return c.json(doc);
+    return c.json(withRegistryExtensions(doc, c.env, requestBody));
   });
 
   app.get("/llms.txt", (c) => c.text(LLMS_TXT(new URL(c.req.url).origin)));
@@ -181,6 +181,42 @@ export function createApp(deps: Deps) {
 
   return app;
 }
+
+/**
+ * Adds the fields MPPScan and similar registries look for on top of mppx's discovery doc:
+ * info.x-guidance, x-payment-info.price + protocols on paid ops, and explicit free routes with security: [].
+ */
+export function withRegistryExtensions(doc: Record<string, unknown>, env: Env, requestBody: Record<string, unknown>): Record<string, unknown> {
+  const testnet = env.TESTNET === "true";
+  const currency = testnet ? CURRENCY.testnet : CURRENCY.mainnet;
+  const info = { ...(doc.info as Record<string, unknown>), "x-guidance": GUIDANCE };
+  const paths = { ...(doc.paths as Record<string, Record<string, Record<string, unknown>>>) };
+  const priced: Record<string, string> = { "/v1/check": PRICING.check, "/v1/check/stance": PRICING.check_stance };
+  for (const [path, price] of Object.entries(priced)) {
+    const op = paths[path]?.post;
+    if (!op) continue;
+    const existing = (op["x-payment-info"] as Record<string, unknown>) ?? {};
+    op["x-payment-info"] = {
+      ...existing,
+      price: { mode: "fixed", currency: "USD", amount: Number(price).toFixed(6) },
+      protocols: [{ mpp: { method: "tempo", intent: "charge", currency } }],
+    };
+  }
+  const free = (summary: string, extra: Record<string, unknown> = {}) => ({
+    summary,
+    security: [],
+    responses: { "200": { description: "Successful response" } },
+    ...extra,
+  });
+  paths["/v1/check/free"] = { post: free(`Check up to ${PRICING.free_max_items} citations, no stance, no payment`, { requestBody }) };
+  paths["/ledger"] = { get: free("Public usage and revenue counters") };
+  paths["/health"] = { get: free("Health check") };
+  paths["/llms.txt"] = { get: free("Agent-facing documentation") };
+  return { ...doc, info, paths };
+}
+
+const GUIDANCE =
+  "Citation integrity checks for AI agents. POST items [{url, quote?, claim?}] to /v1/check (paid, up to 10) or /v1/check/free (3, no stance). Each result reports live/dead, a Wayback archive link, whether the quote is on the page, and a verdict: verified, drift, dead, contradicted, unclear. /v1/check/stance adds an LLM support/contradict judgment per claim. Pay per request with MPP on Tempo (USDC.e); unpaid calls return a 402 challenge.";
 
 const LLMS_TXT = (origin: string) => `# citecheck
 
